@@ -23,9 +23,12 @@ namespace Akka.Streams.Benchmark
             var actorSystem = ActorSystem.Create("AkkaStreams", @"akka.loglevel = DEBUG");
             var materializer = actorSystem.Materializer();
             
+            // create server
             Source<Dsl.Tcp.IncomingConnection, Task<Dsl.Tcp.ServerBinding>> connections = actorSystem.TcpStream().Bind("127.0.0.1", 8888);
 
             var (serverBind, source) = connections.PreMaterialize(materializer);
+            
+            // server event handler - per connection
             source.RunForeach(conn =>
             {
                 var echo = Flow.Create<ByteString>()
@@ -44,18 +47,17 @@ namespace Akka.Streams.Benchmark
             }, materializer);
 
             await serverBind;
-
-            var serverEndpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8888);
-
+            
+            // start client to connect to server
             var clientTask = actorSystem.TcpStream().OutgoingConnection(serverBind.Result.LocalAddress);
-            var startTime = DateTime.UtcNow;
 
+            // generate repeating loop of data
             var repeater = ByteString.FromString("A");
-
             var dataGenerator = Source.Repeat(repeater)
                 .Via(Encoder)
                 .Batch(100, s => s, (s, byteString) => s.Concat(byteString));
 
+            // compute rate at which data is sent client --> server --> client per second
             var bytesPerSecondFlow = Flow.Create<ByteString>()
                 .Via(Decoder)
                 .GroupedWithin(1000, TimeSpan.FromMilliseconds(1000))
@@ -76,9 +78,9 @@ namespace Akka.Streams.Benchmark
                 })
                 .To(Sink.Ignore<(long, DateTime)>());
 
+            // run BiDi flow
             dataGenerator.Via(clientTask).To(bytesPerSecondFlow).Run(materializer);
-
-            //clientTask.RunWith(dataGenerator, bytesPerSecondFlow, materializer);
+            
             await actorSystem.WhenTerminated;
         }
     }
