@@ -29,7 +29,10 @@ namespace Akka.Streams.Benchmark
             var (serverBind, source) = connections.PreMaterialize(materializer);
             
             // server event handler - per connection
+            // await won't complete until server shuts down - need to skip it
+#pragma warning disable 4014 
             source.RunForeach(conn =>
+#pragma warning restore 4014
             {
                 var echo = Flow.Create<ByteString>()
                     .Via(Decoder)
@@ -54,8 +57,8 @@ namespace Akka.Streams.Benchmark
             // generate repeating loop of data
             var repeater = ByteString.FromString("A");
             var dataGenerator = Source.Repeat(repeater)
-                .Via(Encoder)
-                .Batch(100, s => s, (s, byteString) => s.Concat(byteString));
+                .Via(Encoder);
+                //.Batch(40, s => s, (s, byteString) => s.Concat(byteString));
 
             // compute rate at which data is sent client --> server --> client per second
             var bytesPerSecondFlow = Flow.Create<ByteString>()
