@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Streams" Version="1.5.13" />
+    <PackageReference Include="Akka.Streams" Version="1.5.18" />
   </ItemGroup>
 
 </Project>
