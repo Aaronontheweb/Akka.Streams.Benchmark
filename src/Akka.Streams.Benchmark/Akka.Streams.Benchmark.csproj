@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Streams" Version="1.5.27.1" />
+    <PackageReference Include="Akka.Streams" Version="1.5.34" />
   </ItemGroup>
 
 </Project>
