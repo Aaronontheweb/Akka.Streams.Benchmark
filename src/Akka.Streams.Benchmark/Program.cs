@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.IO;
@@ -57,8 +55,8 @@ namespace Akka.Streams.Benchmark
             // generate repeating loop of data
             var repeater = ByteString.FromString("A");
             var dataGenerator = Source.Repeat(repeater)
-                .Via(Encoder);
-                //.Batch(40, s => s, (s, byteString) => s.Concat(byteString));
+                .Via(Encoder)
+                .Batch(100, s => s, (s, byteString) => s.Concat(byteString));
 
             // compute rate at which data is sent client --> server --> client per second
             var bytesPerSecondFlow = Flow.Create<ByteString>()
